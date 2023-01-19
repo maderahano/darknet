@@ -1,0 +1,1 @@
+./darknet detector demo data/obj.data cfg/trash.cfg backup/trash/training/trash_best.weights

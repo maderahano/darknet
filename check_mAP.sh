@@ -1,0 +1,1 @@
+./darknet detector map data/obj.data cfg/trash.cfg backup/trash/training/trash_best.weights -points 0

@@ -1,0 +1,1 @@
+./darknet detector train data/obj.data cfg/trash.cfg backup/trash/training/trash_last.weights -dont_show -map

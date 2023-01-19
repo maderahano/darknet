@@ -1,0 +1,1 @@
+./darknet detector train data/obj.data cfg/trash.cfg yolov4-tiny.conv.29 -dont_show -map

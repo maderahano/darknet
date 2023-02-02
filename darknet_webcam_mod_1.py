@@ -10,22 +10,29 @@ from queue import Queue
 
 
 def parser():
+    configPath = "./cfg/trash.cfg"
+    weightPath = "./backup/trash/training/trash_best.weights"
+    dataPath = "./data/obj.data"
+    treshHold = .25
+    inputFileName = 0
+    outputFileName = "./data/results/result.avi"
+    
     parser = argparse.ArgumentParser(description="YOLO Object Detection")
-    parser.add_argument("--input", type=str, default=0,
+    parser.add_argument("--input", type=str, default=inputFileName,
                         help="video source. If empty, uses webcam 0 stream")
-    parser.add_argument("--out_filename", type=str, default="",
+    parser.add_argument("--out_filename", type=str, default=outputFileName,
                         help="inference video name. Not saved if empty")
-    parser.add_argument("--weights", default="yolov4.weights",
+    parser.add_argument("--weights", default=weightPath,
                         help="yolo weights path")
     parser.add_argument("--dont_show", action='store_true',
                         help="windown inference display. For headless systems")
     parser.add_argument("--ext_output", action='store_true',
                         help="display bbox coordinates of detected objects")
-    parser.add_argument("--config_file", default="./cfg/trash.cfg",
+    parser.add_argument("--config_file", default=configPath,
                         help="path to config file")
-    parser.add_argument("--data_file", default="./data/obj.data",
+    parser.add_argument("--data_file", default=dataPath,
                         help="path to data file")
-    parser.add_argument("--thresh", type=float, default=.25,
+    parser.add_argument("--thresh", type=float, default=treshHold,
                         help="remove detections with confidence below this value")
     return parser.parse_args()
 

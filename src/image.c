@@ -174,6 +174,47 @@ void draw_weighted_label(image a, int r, int c, image label, const float *rgb, c
     }
 }
 
+void print_total_objects(char label[300][4096], int total_detection) {
+    typedef struct {
+        char Key[4096];
+        int Value;
+    }Map;
+    Map map[300];
+    int isExist;
+    int temp = 0;
+    int point;
+    int totalObject = 0;
+    
+    printf("\n<===============End Result===============>\n");
+    for (int i = 0; i < total_detection; ++i) {
+        isExist = 0;
+        for (int j = 0; j < total_detection; ++j) {
+            int checkExistingKey = strcmp(label[i], map[j].Key);
+            if (checkExistingKey == 0) {
+                isExist = 1;
+                point = j;
+                break;
+            }
+        }
+
+        if (isExist == 0) {
+            strcat(map[temp].Key, label[i]);
+            map[temp].Value = 0;
+            map[temp].Value++;
+            temp++;
+            totalObject++;
+        } else {
+            map[point].Value++;
+        }
+    }
+
+    for (int i = 0; i < totalObject; i++) {
+        printf("Total of %s is %d\n", map[i].Key, map[i].Value);
+    }
+    // printf()
+    printf("Total Trash : %d\n", total_detection);
+}
+
 void draw_box_bw(image a, int x1, int y1, int x2, int y2, float brightness)
 {
     //normalize_image(a);
@@ -365,6 +406,7 @@ void draw_detections_v3(image im, detection *dets, int num, float thresh, char *
 
     // image output
     qsort(selected_detections, selected_detections_num, sizeof(*selected_detections), compare_by_probs);
+    char allLabel[300][4096];
     for (i = 0; i < selected_detections_num; ++i) {
             int width = im.h * .002;
             if (width < 1)
@@ -433,6 +475,7 @@ void draw_detections_v3(image im, detection *dets, int num, float thresh, char *
             }
             if (alphabet) {
                 char labelstr[4096] = { 0 };
+                strcat(allLabel[i], names[selected_detections[i].best_class]);
                 strcat(labelstr, names[selected_detections[i].best_class]);
                 char prob_str[10];
                 sprintf(prob_str, ": %.2f", selected_detections[i].det.prob[selected_detections[i].best_class]);
@@ -445,7 +488,6 @@ void draw_detections_v3(image im, detection *dets, int num, float thresh, char *
                     }
                 }
                 image label = get_label_v3(alphabet, labelstr, (im.h*.02));
-                //draw_label(im, top + width, left, label, rgb);
                 draw_weighted_label(im, top + width, left, label, rgb, 0.7);
                 free_image(label);
             }
@@ -459,6 +501,7 @@ void draw_detections_v3(image im, detection *dets, int num, float thresh, char *
                 free_image(tmask);
             }
     }
+    print_total_objects(allLabel, selected_detections_num);
     free(selected_detections);
 }
 

@@ -912,7 +912,6 @@ extern "C" void draw_detections_cv_v3(mat_cv* mat, detection *dets, int num, flo
                 if (dets[i].prob[j] > thresh && show) {
                     if (class_id < 0) {
                         strcat(labelstr, names[j]);
-                        strcat(labelstr, "TEsttttVideo");
                         class_id = j;
                         char buff[20];
                         if (dets[i].track_id) {

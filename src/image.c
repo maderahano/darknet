@@ -174,21 +174,20 @@ void draw_weighted_label(image a, int r, int c, image label, const float *rgb, c
     }
 }
 
-void print_total_objects(char label[300][4096], int total_detection) {
+void print_total_objects(char label[300][4096], int total_detection, int total_objects) {
     typedef struct {
         char Key[4096];
         int Value;
     }Map;
-    Map map[300];
+    Map map[total_objects];
+    
+    printf("\n<===============End Result===============>\n");
     int isExist;
     int temp = 0;
     int point;
-    int totalObject = 0;
-    
-    printf("\n<===============End Result===============>\n");
     for (int i = 0; i < total_detection; ++i) {
         isExist = 0;
-        for (int j = 0; j < total_detection; ++j) {
+        for (int j = 0; j < total_objects; ++j) {
             int checkExistingKey = strcmp(label[i], map[j].Key);
             if (checkExistingKey == 0) {
                 isExist = 1;
@@ -202,13 +201,12 @@ void print_total_objects(char label[300][4096], int total_detection) {
             map[temp].Value = 0;
             map[temp].Value++;
             temp++;
-            totalObject++;
         } else {
             map[point].Value++;
         }
     }
 
-    for (int i = 0; i < totalObject; i++) {
+    for (int i = 0; i < total_objects; i++) {
         printf("Total of %s is %d\n", map[i].Key, map[i].Value);
     }
     // printf()
@@ -501,7 +499,23 @@ void draw_detections_v3(image im, detection *dets, int num, float thresh, char *
                 free_image(tmask);
             }
     }
-    print_total_objects(allLabel, selected_detections_num);
+    char c;
+    int total_objects = 1;
+    FILE *file = fopen("data/obj.names", "r");
+
+    if (file == NULL) {
+        perror("Error while opening the file.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    while((c = fgetc(file)) != EOF) {
+        if (c == 10) {
+            ++total_objects;
+        }
+    }
+    fclose(file);
+
+    print_total_objects(allLabel, selected_detections_num, total_objects);
     free(selected_detections);
 }
 

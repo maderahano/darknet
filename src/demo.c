@@ -260,6 +260,7 @@ void demo(char *cfgfile, char *weightfile, float thresh, float hier_thresh, int 
     float avg_fps = 0;
     int frame_counter = 0;
     int global_frame_counter = 0;
+    get_label_names();
 
     while(1){
         ++count;

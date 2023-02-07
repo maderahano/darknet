@@ -90,6 +90,15 @@ void consume_frame(cap_cv *cap);
 void save_cv_png(mat_cv *img, const char *name);
 void save_cv_jpg(mat_cv *img, const char *name);
 
+// Get Total Label
+typedef struct {
+    char *Key;
+    int Value;
+}Map;
+extern int total_labels;
+extern Map *map;
+void get_label_names();
+
 // Draw Detection
 void draw_detections_cv_v3(mat_cv* show_img, detection *dets, int num, float thresh, char **names, image **alphabet, int classes, int ext_output);
 

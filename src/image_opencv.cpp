@@ -891,12 +891,50 @@ extern "C" void save_cv_jpg(mat_cv *img_src, const char *name)
 }
 // ----------------------------------------
 
+int total_labels;
+Map *map;
+extern "C" void get_label_names()
+{
+    char c;
+    FILE *file = fopen("data/obj.names", "r");
+    total_labels = 1;
+
+    if (file == NULL) {
+        perror("Error while opening the file.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    int i = 0;
+    int j = 0;
+    map = (Map*)malloc(75 * sizeof(int));
+    map[i].Key = (char*)malloc(3000);
+    map[i].Value = 0;
+    while((c = fgetc(file)) != EOF) {
+        if (c == 10) {
+            ++total_labels;
+            i++;
+            j = 0;
+            map[i].Key = (char*)malloc(3000);
+            map[i].Value = 0;
+        } else {
+            map[i].Key[j] = c;
+            j++;
+        }
+    }
+    map = (Map*)realloc(map, total_labels);
+
+    fclose(file);
+}
+// ----------------------------------------
+
 
 // ====================================================================
 // Draw Detection
 // ====================================================================
 extern "C" void draw_detections_cv_v3(mat_cv* mat, detection *dets, int num, float thresh, char **names, image **alphabet, int classes, int ext_output)
 {
+    int total_object_detections = 0;
+
     try {
         cv::Mat *show_img = (cv::Mat*)mat;
         int i, j;
@@ -912,6 +950,17 @@ extern "C" void draw_detections_cv_v3(mat_cv* mat, detection *dets, int num, flo
                 if (dets[i].prob[j] > thresh && show) {
                     if (class_id < 0) {
                         strcat(labelstr, names[j]);
+                        int checkExistingKey = strcmp(labelstr, "trash");
+                        if (checkExistingKey == 0) {
+                            map[0].Value++;
+                        }
+                        // Somehow the two value that I compare is doesn't same, whereas those value in string type is same
+                        // for (int k = 0; k < total_labels; k++) {
+                        //     int checkExistingKey = strcmp(labelstr, map[k].Key);
+                        //     if (checkExistingKey == 0) {
+                        //         map[k].Value++;
+                        //     }
+                        // }
                         class_id = j;
                         char buff[20];
                         if (dets[i].track_id) {
@@ -928,6 +977,7 @@ extern "C" void draw_detections_cv_v3(mat_cv* mat, detection *dets, int num, flo
                         strcat(labelstr, names[j]);
                         printf(", %s: %.0f%% ", names[j], dets[i].prob[j] * 100);
                     }
+                    total_object_detections++;
                 }
             }
             if (class_id >= 0) {
@@ -979,7 +1029,7 @@ extern "C" void draw_detections_cv_v3(mat_cv* mat, detection *dets, int num, flo
 
                 float const font_size = show_img->rows / 1000.F;
                 cv::Size const text_size = cv::getTextSize(labelstr, cv::FONT_HERSHEY_COMPLEX_SMALL, font_size, 1, 0);
-                cv::Point pt1, pt2, pt_text, pt_text_bg1, pt_text_bg2;
+                cv::Point pt1, pt2, pt_text, pt_text_bg1, pt_text_bg2, pt_text_total;
                 pt1.x = left;
                 pt1.y = top;
                 pt2.x = right;
@@ -1027,6 +1077,24 @@ extern "C" void draw_detections_cv_v3(mat_cv* mat, detection *dets, int num, flo
                 // cv::FONT_HERSHEY_COMPLEX_SMALL, cv::FONT_HERSHEY_SIMPLEX
             }
         }
+
+        float const font_size_total = show_img->rows / 525.F;
+        cv::Point pt_text_total;
+        cv::Scalar green_color = CV_RGB(0, 255, 0);
+        pt_text_total.x = 10;
+        pt_text_total.y = 25;
+        char totalTrash[4096] = { 0 };
+        char total[20];
+        strcat(totalTrash, "Total Trash : ");
+        sprintf(total, "%d", total_object_detections);
+        strcat(totalTrash, total);
+        cv::putText(*show_img, totalTrash, pt_text_total, cv::FONT_HERSHEY_COMPLEX_SMALL, font_size_total, green_color, 2 * font_size_total, CV_AA);
+
+        for (i = 0; i < total_labels; i++) {
+            printf("\nTotal of %s is %d", map[i].Key, map[i].Value);
+            map[i].Value = 0;
+        }
+        printf("\nTotal Trash : %d", total_object_detections);
         if (ext_output) {
             fflush(stdout);
         }
@@ -1034,6 +1102,7 @@ extern "C" void draw_detections_cv_v3(mat_cv* mat, detection *dets, int num, flo
     catch (...) {
         cerr << "OpenCV exception: draw_detections_cv_v3() \n";
     }
+    // free(map);
 }
 // ----------------------------------------
 

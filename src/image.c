@@ -138,6 +138,23 @@ image get_label_v3(image **characters, char *string, int size)
     return b;
 }
 
+image get_total_text(image **characters, char *string, int size)
+{
+    size = size / 10;
+    if (size > 7) size = 7;
+    image label = make_empty_image(0, 0, 0);
+    while (*string) {
+        image l = characters[size][(int)*string];
+        image n = tile_images(label, l, -size - 1 + (size + 1) / 2);
+        free_image(label);
+        label = n;
+        ++string;
+    }
+    image b = border_image(label, label.h*.05);
+    free_image(label);
+    return b;
+}
+
 void draw_label(image a, int r, int c, image label, const float *rgb)
 {
     int w = label.w;
@@ -168,6 +185,25 @@ void draw_weighted_label(image a, int r, int c, image label, const float *rgb, c
                 float val1 = get_pixel(label, i, j, k);
                 float val2 = get_pixel(a, i + c, j + r, k);
                 float val_dst = val1 * rgb[k] * alpha + val2 * (1 - alpha);
+                set_pixel(a, i + c, j + r, k, val_dst);
+            }
+        }
+    }
+}
+
+void draw_total_object_detection(image a, int r, int c, image label, const float alpha)
+{
+    int w = label.w;
+    int h = label.h;
+    if (r - h >= 0) r = r - h;
+
+    int i, j, k;
+    for (j = 0; j < h && j + r < a.h; ++j) {
+        for (i = 0; i < w && i + c < a.w; ++i) {
+            for (k = 0; k < label.c; ++k) {
+                float val1 = get_pixel(label, i, j, k);
+                float val2 = get_pixel(a, i + c, j + r, k);
+                float val_dst = val1 * alpha + val2 * (1 - alpha);
                 set_pixel(a, i + c, j + r, k, val_dst);
             }
         }
@@ -209,7 +245,6 @@ void print_total_objects(char label[300][4096], int total_detection, int total_o
     for (int i = 0; i < total_objects; i++) {
         printf("Total of %s is %d\n", map[i].Key, map[i].Value);
     }
-    // printf()
     printf("Total Trash : %d\n", total_detection);
 }
 
@@ -514,6 +549,14 @@ void draw_detections_v3(image im, detection *dets, int num, float thresh, char *
         }
     }
     fclose(file);
+
+    char totalTrash[4096] = { 0 };
+    char total[20];
+    strcat(totalTrash, "Total Trash : ");
+    sprintf(total, "%d", selected_detections_num);
+    strcat(totalTrash, total);
+    image totalText = get_total_text(alphabet, totalTrash, (im.h*.02));
+    draw_total_object_detection(im, 10, 10, totalText, 0.7);
 
     print_total_objects(allLabel, selected_detections_num, total_objects);
     free(selected_detections);
